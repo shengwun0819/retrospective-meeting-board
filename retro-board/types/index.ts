@@ -1,0 +1,126 @@
+export type SectionId = 'continue' | 'invent' | 'stop' | 'act'
+
+export interface RetroSession {
+  id: string
+  name: string
+  sprint_number?: number
+  start_date?: string
+  end_date?: string
+  created_at: string
+}
+
+export interface Board {
+  id: string
+  session_id: string
+  template_id: string
+  created_at: string
+  updated_at: string
+}
+
+export interface StickyNote {
+  id: string
+  board_id: string
+  section_id: SectionId
+  content: string
+  color: string
+  author_id: string
+  author_name: string
+  pos_x: number
+  pos_y: number
+  width?: number
+  height?: number
+  created_at: string
+  updated_at: string
+  reactions?: Reaction[]
+  comments?: Comment[]
+}
+
+export interface Reaction {
+  id: string
+  sticky_note_id?: string
+  canvas_element_id?: string
+  user_id: string
+  user_name: string
+  emoji: string
+  created_at: string
+}
+
+export interface Comment {
+  id: string
+  sticky_note_id?: string
+  canvas_element_id?: string
+  author_id: string
+  author_name: string
+  content: string
+  created_at: string
+}
+
+export interface ActionItem {
+  id: string
+  board_id: string
+  source_sticky_note_id?: string
+  title: string
+  description?: string
+  owner_name?: string
+  due_date?: string
+  status: 'Open' | 'InProgress' | 'Done'
+  created_at: string
+}
+
+export interface SectionConfig {
+  id: SectionId
+  title: string
+  emoji: string
+  subtitle: string
+  headerBg: string
+  sectionBg: string
+  defaultNoteColor: string
+}
+
+export interface CursorPosition {
+  userId: string
+  userName: string
+  x: number
+  y: number
+  color: string
+}
+
+export interface OnlineUser {
+  id: string
+  name: string
+  color: string
+}
+
+export type CanvasElementKind = 'text' | 'rect' | 'circle' | 'arrow'
+export type CanvasTool = 'select' | 'text' | 'rect' | 'circle' | 'arrow'
+
+export interface CanvasElement {
+  id: string
+  board_id: string
+  type: CanvasElementKind
+  pos_x: number
+  pos_y: number
+  width: number
+  height: number
+  x2?: number
+  y2?: number
+  fill_color: string
+  stroke_color: string
+  stroke_width: number
+  text_content: string
+  text_color: string
+  font_size: number
+  created_by: string
+  created_at: string
+  updated_at: string
+  reactions?: Reaction[]
+  comments?: Comment[]
+}
+
+export type RealtimeEvent =
+  | { type: 'sticky.create'; payload: StickyNote }
+  | { type: 'sticky.update'; payload: StickyNote }
+  | { type: 'sticky.delete'; payload: { id: string } }
+  | { type: 'reaction.toggle'; payload: Reaction & { removed?: boolean } }
+  | { type: 'comment.add'; payload: Comment }
+  | { type: 'cursor.move'; payload: CursorPosition }
