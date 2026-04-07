@@ -40,9 +40,33 @@ A real-time Sprint retrospective tool built for agile teams. Sign in and share t
 | Styling | Tailwind CSS v4 |
 | Database | Supabase (PostgreSQL) |
 | Realtime | Supabase Realtime (postgres_changes + broadcast + presence) |
+| Auth | Supabase Auth (Email/Password + middleware) |
 | Drag & Drop | @dnd-kit |
 | Analytics | @vercel/analytics |
 | Deployment | Vercel |
+
+## Tools & Services
+
+### Vercel
+- **Purpose**: Deployment platform for Next.js (static pages + Serverless Functions)
+- **Plan**: Free (Hobby)
+- **Production URL**: https://retro-board-beryl.vercel.app
+
+### Supabase
+- **Purpose**: PostgreSQL database + real-time collaboration + user authentication
+- **PostgreSQL**: Stores all application data (sessions, boards, sticky notes, canvas elements, etc.)
+- **Realtime**: Multi-user sync via postgres_changes, broadcast, and presence
+- **Auth**: Email/Password login; middleware protects all page routes
+
+### ClickUp (MCP mode)
+- **Purpose**: Export retrospective data to ClickUp Docs after each session
+- **How it works**: User runs `/clickup-export <session-id>` in their local Claude Code CLI
+- **Limitation**: The MCP Server runs locally only — **cannot be triggered directly from the Vercel web app**
+- **Local setup**: Add ClickUp MCP Server to `~/.claude/settings.json` (`https://mcp.clickup.com/mcp`)
+
+### @vercel/analytics
+- **Purpose**: Automatically tracks page views and Web Vitals (LCP, FID, CLS)
+- **View data**: Vercel Dashboard → Analytics tab
 
 ## Setup
 
