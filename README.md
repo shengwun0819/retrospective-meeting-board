@@ -33,6 +33,7 @@ Run migrations in order via Supabase SQL Editor:
 1. `supabase/migrations/001_initial.sql`
 2. `supabase/migrations/002_canvas_elements.sql`
 3. `supabase/migrations/003_canvas_element_interactions.sql`
+4. `supabase/migrations/004_normalize_positions.sql`
 
 ## Project Structure
 
