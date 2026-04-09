@@ -226,7 +226,6 @@ export default function StickyNote({
           <div className="w-px bg-gray-200 self-stretch mx-0.5" />
 
           {/* Section colors */}
-          <div className="w-px bg-gray-200 self-stretch mx-0.5" />
           {SECTION_CONFIGS.map((s) => (
             <button
               key={s.id}

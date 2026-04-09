@@ -10,10 +10,67 @@ interface ExportModalProps {
   onClose: () => void
 }
 
+// Recursive JSON tree node
+function JsonNode({ value, depth = 0 }: { value: unknown; depth?: number }) {
+  const [open, setOpen] = useState(depth < 2)
+
+  if (value === null) return <span className="text-gray-400">null</span>
+  if (typeof value === 'boolean') return <span className="text-purple-500">{value.toString()}</span>
+  if (typeof value === 'number') return <span className="text-blue-500">{value}</span>
+  if (typeof value === 'string') return <span className="text-green-600">&quot;{value}&quot;</span>
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) return <span className="text-gray-400">[]</span>
+    return (
+      <span>
+        <button onClick={() => setOpen(o => !o)} className="text-gray-500 hover:text-gray-700 font-mono text-xs mr-1">{open ? '▼' : '▶'}</button>
+        <span className="text-gray-500">[{!open && <span className="text-gray-400 italic"> {value.length} items </span>}]</span>
+        {open && (
+          <div className="pl-4 border-l border-gray-100 dark:border-gray-700 ml-1 mt-0.5 space-y-0.5">
+            {value.map((item, i) => (
+              <div key={i} className="flex gap-1 items-start">
+                <span className="text-gray-300 text-xs shrink-0">{i}:</span>
+                <JsonNode value={item} depth={depth + 1} />
+              </div>
+            ))}
+          </div>
+        )}
+      </span>
+    )
+  }
+
+  if (typeof value === 'object') {
+    const keys = Object.keys(value as object)
+    if (keys.length === 0) return <span className="text-gray-400">{'{}'}</span>
+    return (
+      <span>
+        <button onClick={() => setOpen(o => !o)} className="text-gray-500 hover:text-gray-700 font-mono text-xs mr-1">{open ? '▼' : '▶'}</button>
+        <span className="text-gray-500">{'{'}{!open && <span className="text-gray-400 italic"> {keys.length} keys </span>}{'}'}</span>
+        {open && (
+          <div className="pl-4 border-l border-gray-100 dark:border-gray-700 ml-1 mt-0.5 space-y-0.5">
+            {keys.map(k => (
+              <div key={k} className="flex gap-1 items-start">
+                <span className="text-amber-600 text-xs shrink-0 font-medium">{k}:</span>
+                <JsonNode value={(value as Record<string, unknown>)[k]} depth={depth + 1} />
+              </div>
+            ))}
+          </div>
+        )}
+      </span>
+    )
+  }
+
+  return <span className="text-gray-700">{String(value)}</span>
+}
+
 export default function ExportModal({ sessionId, payload, loading, onClose }: ExportModalProps) {
   const [copied, setCopied] = useState<'command' | 'json' | null>(null)
+  const [spaceId, setSpaceId] = useState('')
+  const [docName, setDocName] = useState('')
 
-  const command = `/clickup-export ${sessionId}`
+  const command = spaceId && docName
+    ? `/clickup-export ${sessionId} --space-id ${spaceId} --doc "${docName}"`
+    : `/clickup-export ${sessionId}`
 
   const copyText = async (text: string, type: 'command' | 'json') => {
     await navigator.clipboard.writeText(text)
@@ -23,14 +80,14 @@ export default function ExportModal({ sessionId, payload, loading, onClose }: Ex
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="p-5 border-b border-gray-200 flex items-center justify-between">
+        <div className="p-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between shrink-0">
           <div>
-            <h2 className="font-bold text-gray-800 text-lg">📤 Export to ClickUp</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Writes to the retro record doc via ClickUp MCP Server</p>
+            <h2 className="font-bold text-gray-800 dark:text-gray-100 text-lg">📤 Export to ClickUp</h2>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Writes to your ClickUp doc via ClickUp MCP Server</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl leading-none">×</button>
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
@@ -48,23 +105,63 @@ export default function ExportModal({ sessionId, payload, loading, onClose }: Ex
             </div>
           ) : (
             <>
-              {/* Step 1 */}
-              <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-                <p className="text-sm font-semibold text-blue-800 mb-2">
-                  Step 1: Make sure ClickUp MCP Server is configured in Claude Code
+              {/* Step 1: MCP Setup */}
+              <div className="bg-blue-50 rounded-xl p-4 border border-blue-100 space-y-3">
+                <p className="text-sm font-semibold text-blue-800">
+                  Step 1: Configure ClickUp MCP Server in Claude Code
                 </p>
                 <p className="text-xs text-blue-600 leading-relaxed">
-                  Add the ClickUp MCP Server (OAuth mode) to your Claude Code settings (<code className="bg-blue-100 px-1 rounded">~/.claude/settings.json</code>). The browser will open automatically for authorization on first use — no API token needed.
+                  Add the following to <code className="bg-blue-100 px-1 rounded">~/.claude/settings.json</code> under <code className="bg-blue-100 px-1 rounded">mcpServers</code>:
+                </p>
+                <div className="relative">
+                  <pre className="bg-blue-900 text-blue-100 rounded-lg p-3 text-xs overflow-x-auto font-mono leading-relaxed">{`"clickup": {
+  "command": "npx",
+  "args": ["-y", "@clickup/mcp-server"],
+  "env": { "CLICKUP_AUTH_TYPE": "oauth" }
+}`}</pre>
+                </div>
+                <p className="text-xs text-blue-500">
+                  The browser will open automatically for OAuth authorization on first use — no API token needed.
                 </p>
               </div>
 
-              {/* Step 2 */}
-              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                <p className="text-sm font-semibold text-gray-700 mb-2">
-                  Step 2: Run this command in Claude Code
+              {/* Step 2: Target */}
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700 space-y-3">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">Step 2: Set export target (optional)</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Space ID</label>
+                    <input
+                      type="text"
+                      value={spaceId}
+                      onChange={(e) => setSpaceId(e.target.value)}
+                      placeholder="e.g. 90151234"
+                      className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500 transition-colors bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">Document name</label>
+                    <input
+                      type="text"
+                      value={docName}
+                      onChange={(e) => setDocName(e.target.value)}
+                      placeholder="e.g. Retro Record"
+                      className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-blue-500 transition-colors bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+                    />
+                  </div>
+                </div>
+                {(!spaceId || !docName) && (
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Leave blank to use the default hardcoded target.</p>
+                )}
+              </div>
+
+              {/* Step 3: Command */}
+              <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                  Step 3: Run this command in Claude Code
                 </p>
                 <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-gray-900 text-green-400 rounded-lg px-3 py-2 text-sm font-mono">
+                  <code className="flex-1 bg-gray-900 text-green-400 rounded-lg px-3 py-2 text-xs font-mono break-all">
                     {command}
                   </code>
                   <button
@@ -78,94 +175,38 @@ export default function ExportModal({ sessionId, payload, loading, onClose }: Ex
                     {copied === 'command' ? 'Copied!' : 'Copy'}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">
-                  Claude will read this session&apos;s retro data and create a new page in the &quot;retro record&quot; doc via ClickUp MCP.
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                  Claude will read this session&apos;s retro data and create a new page in the target doc.
                 </p>
               </div>
 
-              {/* Summary Preview */}
-              <div className="border border-gray-200 rounded-xl overflow-hidden">
-                <div className="bg-gray-50 px-4 py-2 flex items-center justify-between">
-                  <p className="text-xs font-semibold text-gray-600">Export data preview</p>
+              {/* Export Data Preview (JSON tree) */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden">
+                <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 flex items-center justify-between">
+                  <p className="text-xs font-semibold text-gray-600 dark:text-gray-300">Export data preview</p>
                   <button
                     onClick={() => copyText(JSON.stringify({ payload }, null, 2), 'json')}
                     className={`text-xs px-2 py-1 rounded transition-all ${
                       copied === 'json'
-                        ? 'text-green-600'
-                        : 'text-gray-500 hover:text-gray-700'
+                        ? 'text-green-600 dark:text-green-400'
+                        : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
                     }`}
                   >
                     {copied === 'json' ? 'Copied JSON' : 'Copy JSON'}
                   </button>
                 </div>
-                <div className="p-4 space-y-3">
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Task title</p>
-                    <p className="text-sm font-medium text-gray-800">{payload.taskName}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">Tags</p>
-                    <div className="flex gap-1 flex-wrap">
-                      {payload.tags.map((tag) => (
-                        <span key={tag} className="text-xs bg-purple-100 text-purple-700 rounded-full px-2 py-0.5">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">
-                      Act notes ({payload.actNotes.length})
-                    </p>
-                    {payload.actNotes.length === 0 ? (
-                      <p className="text-xs text-gray-400 italic">(empty)</p>
-                    ) : (
-                      <ul className="space-y-1">
-                        {payload.actNotes.slice(0, 3).map((n, i) => (
-                          <li key={i} className="text-xs text-gray-700 truncate">
-                            • {n.content} <span className="text-gray-400">— {n.author}</span>
-                          </li>
-                        ))}
-                        {payload.actNotes.length > 3 && (
-                          <li className="text-xs text-gray-400">...and {payload.actNotes.length - 3} more</li>
-                        )}
-                      </ul>
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-500 mb-1">
-                      Action items ({payload.actionItems.length})
-                    </p>
-                    {payload.actionItems.length === 0 ? (
-                      <p className="text-xs text-gray-400 italic">(no action items)</p>
-                    ) : (
-                      <ul className="space-y-1">
-                        {payload.actionItems.slice(0, 3).map((a, i) => (
-                          <li key={i} className="text-xs text-gray-700 truncate">
-                            <span className={`inline-block rounded px-1 mr-1 ${
-                              a.status === 'Done' ? 'bg-green-100 text-green-700' :
-                              a.status === 'InProgress' ? 'bg-blue-100 text-blue-700' :
-                              'bg-gray-100 text-gray-600'
-                            }`}>{a.status}</span>
-                            {a.title}
-                          </li>
-                        ))}
-                        {payload.actionItems.length > 3 && (
-                          <li className="text-xs text-gray-400">...and {payload.actionItems.length - 3} more</li>
-                        )}
-                      </ul>
-                    )}
-                  </div>
+                <div className="p-4 text-xs font-mono overflow-x-auto max-h-64 overflow-y-auto bg-white dark:bg-gray-900">
+                  <JsonNode value={payload} depth={0} />
                 </div>
               </div>
             </>
           )}
         </div>
 
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200 dark:border-gray-700 shrink-0">
           <button
             onClick={onClose}
-            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl transition-all text-sm"
+            className="w-full bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium py-2.5 rounded-xl transition-all text-sm"
           >
             Close
           </button>

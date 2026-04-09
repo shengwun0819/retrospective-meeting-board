@@ -41,6 +41,7 @@ Run migrations in order via Supabase SQL Editor:
 3. `supabase/migrations/003_canvas_element_interactions.sql`
 4. `supabase/migrations/004_normalize_positions.sql`
 5. `supabase/migrations/005_sticky_note_formatting.sql`
+6. `supabase/migrations/006_team_and_feedback.sql`
 
 ## Commands
 

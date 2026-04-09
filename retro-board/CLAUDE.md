@@ -30,6 +30,7 @@ Run migrations in order against your Supabase project (SQL Editor):
 3. `supabase/migrations/003_canvas_element_interactions.sql`
 4. `supabase/migrations/004_normalize_positions.sql`
 5. `supabase/migrations/005_sticky_note_formatting.sql`
+6. `supabase/migrations/006_team_and_feedback.sql` — adds `team` column to `retro_sessions`; creates `feedback` table
 
 ## Architecture
 
@@ -57,7 +58,11 @@ Canvas element creation uses **optimistic UI**: a `temp_${Date.now()}` prefixed 
 - **`lib/supabase.ts`** — `getSupabaseClient()` (browser singleton) and `createServerSupabaseClient()` (API routes/SSR); realtime throttled to 10 events/sec.
 - **`lib/autoArrange.ts`** — Pure function `calculateAutoArrangePositions()` that computes normalized (0.0–1.0) positions for auto-arrange. Extracts logic from `Board.tsx`; groups notes by author alphabetically into columns, wraps at section boundary.
 - **`contexts/UserContext.tsx`** — Anonymous user identity (ID, name, color) stored in `sessionStorage`; set via `NicknameModal` on first visit.
-- **`types/index.ts`** — All shared TypeScript interfaces including `CanvasElement`, `CanvasTool`, `SectionId`. `StickyNote` includes `is_bold`, `is_italic`, `is_underline` fields.
+- **`contexts/ThemeContext.tsx`** — Global Light/Dark theme. Persists to `localStorage` under `retro-theme`. Exposes `{ theme, isDark, toggleTheme }`. Applies the `dark` class to `document.documentElement` via `applyTheme()`. Initialized with a lazy `useState` initializer (reads localStorage on mount; safe for SSR via `typeof window === 'undefined'` guard).
+- **`components/FeedbackButton.tsx`** — Floating feedback button (bottom-right, all pages). Opens a modal; POSTs to `/api/feedback`.
+- **`components/modals/BoardSettingsModal.tsx`** — Modal to edit Sprint Number and Team from within the board. PATCHes `/api/sessions/[id]`.
+- **`components/NavigationProgress.tsx`** — Top progress bar on navigation. Reads `isDark` from `ThemeContext` to switch gradient colour. Must be rendered **inside** `ThemeProvider` in `layout.tsx`.
+- **`types/index.ts`** — All shared TypeScript interfaces including `CanvasElement`, `CanvasTool`, `SectionId`. `StickyNote` includes `is_bold`, `is_italic`, `is_underline` fields. `RetroSession` includes `team?: string`. `SectionConfig` includes `sectionDarkBg`.
 - **`lib/constants.ts`** — `SECTION_CONFIGS` (4 sections with colors/emojis), `REACTIONS`, `NOTE_COLORS`, `USER_COLORS`.
 
 ### Realtime Channels
@@ -67,11 +72,24 @@ Single channel `board:${boardId}` with:
 - `broadcast` for cursor position updates
 - `presence` for online user tracking
 
+### Dark Mode
+
+Theme is toggled by adding/removing the `dark` class on `<html>`. All components use Tailwind `dark:` variants.
+
+**Critical Tailwind v4 config** — `app/globals.css` line 2:
+```css
+@custom-variant dark (&:where(.dark, .dark *));
+```
+Without this line, Tailwind v4 defaults `dark:` to `@media (prefers-color-scheme: dark)` (OS preference), making the board always dark on macOS Dark Mode regardless of the UI toggle. This one line switches it to class-based dark mode.
+
+`ThemeProvider` (in `app/layout.tsx`) wraps the entire app. The theme toggle button lives on the homepage; within boards it's in `Toolbar.tsx` via the ⚙️ gear icon path. The `NavigationProgress` bar gradient also switches colour based on `isDark`.
+
 ### Database Tables
 
 ```
-retro_sessions → boards (1:1) → sticky_notes, action_items, canvas_elements
+retro_sessions (+ team) → boards (1:1) → sticky_notes, action_items, canvas_elements
 sticky_notes → reactions, comments
+feedback (standalone, no FK)
 ```
 
 All RLS policies are `allow_all` (no auth, MVP).
@@ -115,7 +133,7 @@ Export uses a **Claude Code MCP skill** pattern — the web app does not hold a 
 3. The `clickup-export` skill fetches `GET /api/sessions/[id]/export`, then calls `clickup_create_document_page`
 
 Known IDs (do not re-fetch):
-- Document ID: `your_clickup_doc_id`
-- Retro Record page ID: `your_clickup_page_id`
+- Document ID: `rcj35-3025`
+- Retro Record page ID: `rcj35-143178`
 
-Target path: `your_clickup_target_path`
+Target path: `Sygna > Sygna Docs (master) > Sygna Docs (Tech) > Retro Record > Sprint {N}`

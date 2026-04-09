@@ -33,6 +33,7 @@ import NicknameModal from '@/components/modals/NicknameModal'
 import CommentPanel from '@/components/modals/CommentPanel'
 import AllCommentsPanel from '@/components/modals/AllCommentsPanel'
 import ActionItemModal from '@/components/modals/ActionItemModal'
+import BoardSettingsModal from '@/components/modals/BoardSettingsModal'
 import ExportModal from '@/components/modals/ExportModal'
 import BoardSidebar from '@/components/sidebar/BoardSidebar'
 import { useUser } from '@/contexts/UserContext'
@@ -42,6 +43,7 @@ import { calculateAutoArrangePositions } from '@/lib/autoArrange'
 interface BoardProps {
   sessionId: string
   sessionName: string
+  team?: string
   sprintNumber?: number
   boardId: string
 }
@@ -61,7 +63,7 @@ function detectSection(cx: number, cy: number, splitXPx: number, splitYPx: numbe
   return 'act'
 }
 
-export default function Board({ sessionId, sessionName, sprintNumber, boardId }: BoardProps) {
+export default function Board({ sessionId, sessionName, team: initialTeam, sprintNumber: initialSprintNumber, boardId }: BoardProps) {
   const router = useRouter()
   const { user, authName, setUserName } = useUser()
   const canvasRef = useRef<HTMLDivElement>(null)
@@ -89,6 +91,12 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
   const [actionItemNote, setActionItemNote] = useState<StickyNoteType | null>(null)
   const [actionItemElement, setActionItemElement] = useState<CanvasElement | null>(null)
   const [showActionItems, setShowActionItems] = useState(false)
+  const [actionItemInitView, setActionItemInitView] = useState<'list' | 'create'>('list')
+
+  // Board settings (team / sprint)
+  const [showSettings, setShowSettings] = useState(false)
+  const [sessionTeam, setSessionTeam] = useState(initialTeam)
+  const [sessionSprint, setSessionSprint] = useState(initialSprintNumber)
   const [showAllComments, setShowAllComments] = useState(false)
   const [showExport, setShowExport] = useState(false)
   const [exportPayload, setExportPayload] = useState<RetroExportPayload | null>(null)
@@ -217,11 +225,14 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
       })
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'reactions' }, (payload) => {
         const r = payload.new as Reaction
+        // Filter out both existing real reaction (same id) and any pending temp reaction (same user+emoji)
+        const dedupeReactions = (existing: Reaction[]) =>
+          existing.filter(x => x.id !== r.id && !(x.id.startsWith('temp_') && x.user_id === r.user_id && x.emoji === r.emoji))
         if (r.sticky_note_id) {
-          setNotes(prev => prev.map(n => n.id === r.sticky_note_id ? { ...n, reactions: [...(n.reactions ?? []).filter(x => x.id !== r.id), r] } : n))
+          setNotes(prev => prev.map(n => n.id === r.sticky_note_id ? { ...n, reactions: [...dedupeReactions(n.reactions ?? []), r] } : n))
         } else if (r.canvas_element_id) {
-          setCanvasElements(prev => prev.map(el => el.id === r.canvas_element_id ? { ...el, reactions: [...(el.reactions ?? []).filter(x => x.id !== r.id), r] } : el))
-          setCommentElement(prev => prev?.id === r.canvas_element_id && prev ? { ...prev, reactions: [...(prev.reactions ?? []).filter(x => x.id !== r.id), r] } as typeof prev : prev)
+          setCanvasElements(prev => prev.map(el => el.id === r.canvas_element_id ? { ...el, reactions: [...dedupeReactions(el.reactions ?? []), r] } : el))
+          setCommentElement(prev => prev?.id === r.canvas_element_id && prev ? { ...prev, reactions: [...dedupeReactions(prev.reactions ?? []), r] } as typeof prev : prev)
         }
       })
       .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'reactions' }, (payload) => {
@@ -372,6 +383,11 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
       const pos_x = ((inRight ? splitXPx + 20 : 20) + col * 190 + jitter) / canvasW
       const pos_y = ((inBottom ? splitYPx + 70 : 70) + row * 145 + jitter) / canvasH
 
+      // Optimistic add with temp ID for instant feedback
+      const tempId = `temp_${Date.now()}`
+      const tempNote: StickyNoteType = { id: tempId, board_id: boardId, section_id: sectionId as StickyNoteType['section_id'], content: '', color, author_id: currentUser.id, author_name: currentUser.name, pos_x, pos_y, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), reactions: [], comments: [] }
+      setNotes(ns => [...ns, tempNote])
+
       const res = await fetch(`/api/boards/${boardId}/stickies`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -379,9 +395,11 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
       })
       if (res.ok) {
         const note = await res.json()
-        setNotes(ns => ns.find(n => n.id === note.id) ? ns : [...ns, { ...note, reactions: [], comments: [] }])
+        setNotes(ns => ns.map(n => n.id === tempId ? { ...note, reactions: [], comments: [] } : n))
         setHistory(h => [...h, { type: 'create', note }])
         setRedoStack([])
+      } else {
+        setNotes(ns => ns.filter(n => n.id !== tempId))
       }
     }
     run()
@@ -430,6 +448,12 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
     const cy = pos_y * canvasH + NOTE_H / 2
     const sectionId = detectSection(cx, cy, canvasW * splitX / 100, canvasH * splitY / 100)
     const color = SECTION_CONFIGS.find(s => s.id === sectionId)?.defaultNoteColor ?? copied.color
+
+    // Optimistic paste for instant feedback
+    const tempId = `temp_${Date.now()}`
+    const tempNote: StickyNoteType = { id: tempId, board_id: boardId, section_id: sectionId as StickyNoteType['section_id'], content: copied.content, color, author_id: currentUser.id, author_name: currentUser.name, pos_x, pos_y, is_bold: copied.is_bold, is_italic: copied.is_italic, is_underline: copied.is_underline, width: copied.width, height: copied.height, created_at: new Date().toISOString(), updated_at: new Date().toISOString(), reactions: [], comments: [] }
+    setNotes(ns => [...ns, tempNote])
+
     fetch(`/api/boards/${boardId}/stickies`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -437,7 +461,9 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
     }).then(async res => {
       if (res.ok) {
         const note = await res.json()
-        setNotes(ns => ns.find(n => n.id === note.id) ? ns : [...ns, { ...note, reactions: [], comments: [] }])
+        setNotes(ns => ns.map(n => n.id === tempId ? { ...note, reactions: [], comments: [] } : n))
+      } else {
+        setNotes(ns => ns.filter(n => n.id !== tempId))
       }
     })
   }, [boardId, splitX, splitY])
@@ -742,6 +768,18 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
     if (res.ok) { routerEvents.start(); router.push('/') }
   }
 
+  const handleSaveSettings = async (updates: { team: string; sprint_number?: number }) => {
+    const res = await fetch(`/api/sessions/${sessionId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    })
+    if (res.ok) {
+      setSessionTeam(updates.team || undefined)
+      setSessionSprint(updates.sprint_number)
+    }
+  }
+
   const handleAutoArrange = useCallback((sectionId: string) => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -774,11 +812,12 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
       style={{ backgroundImage: 'radial-gradient(circle, #d1d5db 1px, transparent 1px)', backgroundSize: '24px 24px' }}>
       <Toolbar
         sessionName={sessionName}
-        sprintNumber={sprintNumber}
+        sprintNumber={sessionSprint}
+        team={sessionTeam}
         onlineUsers={onlineUsers}
         currentUser={user ? { ...user, color: boardUserColor } : null}
         onAddNote={(sectionId) => addNote(sectionId)}
-        onShowActionItems={() => { setActionItemNote(null); setShowActionItems(true) }}
+        onShowActionItems={() => { setActionItemNote(null); setActionItemInitView('list'); setShowActionItems(true) }}
         actionItemCount={actionItems.length}
         onExport={handleExport}
         boardLink={typeof window !== 'undefined' ? window.location.href : ''}
@@ -786,6 +825,7 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
         onDeleteBoard={handleDeleteBoard}
         onShowAllComments={() => setShowAllComments(true)}
         totalCommentCount={notes.reduce((sum, n) => sum + (n.comments?.length ?? 0), 0)}
+        onOpenSettings={() => setShowSettings(true)}
       />
 
       <main className="pt-14 overflow-x-auto overflow-y-hidden">
@@ -811,7 +851,7 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
             onDeleteNote={deleteNote}
             onReaction={handleReaction}
             onComment={(note) => requireUser(() => { setCommentElement(null); setCommentNote(note) })}
-            onActionItem={(note) => requireUser(() => { setActionItemNote(note); setShowActionItems(true) })}
+            onActionItem={(note) => requireUser(() => { setActionItemNote(note); setActionItemInitView('create'); setShowActionItems(true) })}
             currentUserId={user?.id ?? ''}
             activeTool={activeTool}
             dragOverSection={dragOverSection}
@@ -821,7 +861,7 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
             onHoverNote={(note) => { hoveredNoteRef.current = note }}
             onElementReaction={handleElementReaction}
             onElementComment={(el) => requireUser(() => { setCommentNote(null); setCommentElement(el) })}
-            onElementActionItem={(el) => requireUser(() => { setActionItemNote(null); setActionItemElement(el); setShowActionItems(true) })}
+            onElementActionItem={(el) => requireUser(() => { setActionItemNote(null); setActionItemElement(el); setActionItemInitView('create'); setShowActionItems(true) })}
             onAutoArrange={handleAutoArrange}
           />
 
@@ -857,12 +897,20 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
         <ActionItemModal
           note={actionItemNote}
           initialTitle={actionItemElement?.text_content}
+          initialView={actionItemInitView}
           existingItems={actionItems}
           currentUser={user}
-          onClose={() => { setShowActionItems(false); setActionItemNote(null); setActionItemElement(null) }}
+          onClose={() => { setShowActionItems(false); setActionItemNote(null); setActionItemElement(null); setActionItemInitView('list') }}
           onCreate={handleCreateActionItem} onUpdateStatus={handleUpdateActionStatus} onDelete={handleDeleteActionItem} />
       )}
       {showExport && <ExportModal sessionId={sessionId} payload={exportPayload} loading={exportLoading} onClose={() => setShowExport(false)} />}
+      {showSettings && (
+        <BoardSettingsModal
+          session={{ id: sessionId, name: sessionName, team: sessionTeam, sprint_number: sessionSprint, created_at: '' }}
+          onClose={() => setShowSettings(false)}
+          onSave={handleSaveSettings}
+        />
+      )}
       <CursorOverlay cursors={cursors} currentUserId={user?.id ?? ''} />
     </div>
   )

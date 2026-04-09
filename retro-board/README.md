@@ -33,6 +33,9 @@ A real-time Sprint retrospective tool built for agile teams. Sign in and share t
 - **Export to ClickUp**: Export all four sections to ClickUp Docs via a Claude Code MCP skill.
 - **Share link**: One-click copy of the board URL.
 - **Responsive**: Bottom toolbar scrolls horizontally on small screens.
+- **Dark / Light theme**: Toggle in the top-right corner; persisted to localStorage and applied across all pages.
+- **Board settings**: ⚙️ button in the toolbar — edit Team and Sprint Number from within the board.
+- **Feedback button**: Floating 💬 Feedback button on all pages.
 
 ## Tech Stack
 
@@ -81,6 +84,7 @@ Go to [supabase.com](https://supabase.com) and create a new project. Run the fol
 3. `supabase/migrations/003_canvas_element_interactions.sql` — reactions and comments on canvas elements
 4. `supabase/migrations/004_normalize_positions.sql` — normalizes sticky note positions (absolute pixels → 0.0–1.0 fractions)
 5. `supabase/migrations/005_sticky_note_formatting.sql` — adds text formatting columns (is_bold / is_italic / is_underline)
+6. `supabase/migrations/006_team_and_feedback.sql` — adds `team` column to `retro_sessions`; creates `feedback` table
 
 All RLS policies are `allow_all`. Access is controlled at the application layer via Supabase Auth + middleware.
 
@@ -115,7 +119,7 @@ npm run lint      # ESLint check
 
 ## Usage
 
-1. **Create a session**: Enter a Sprint number and session name on the home page.
+1. **Create a session**: Select a Team (Sygna / Turing / Mobius / Crypto platform) and enter a Sprint number — the session name is generated automatically.
 2. **Share the link**: Copy the board URL and send it to your team.
 3. **Enter a nickname**: Each participant enters a display name.
 4. **Add sticky notes**: Click the `+` button in a section, or use the toolbar dropdown.
@@ -155,6 +159,8 @@ Target path: `Sygna > Sygna Docs (master) > Sygna Docs (Tech) > Retro Record > S
 |---|---|
 | `Cmd/Ctrl + Z` | Undo |
 | `Cmd/Ctrl + Shift + Z` | Redo |
+| `Ctrl + C` | Copy hovered sticky note |
+| `Ctrl + V` | Paste (auto-applies section color) |
 | Double-click sticky note | Inline edit |
 | `Enter` | Save edit |
 | `Shift + Enter` | New line |
@@ -214,13 +220,18 @@ retro-board/
 │   ├── modals/
 │   │   ├── NicknameModal.tsx            # Nickname input
 │   │   ├── CommentPanel.tsx             # Comment side panel
+│   │   ├── AllCommentsPanel.tsx         # All comments panel
 │   │   ├── ActionItemModal.tsx          # Action items
 │   │   ├── ExportModal.tsx              # ClickUp export
+│   │   ├── BoardSettingsModal.tsx       # Board settings (Team / Sprint Number)
 │   │   └── ConfirmDeleteModal.tsx       # Delete confirmation
-│   └── sidebar/
-│       └── BoardSidebar.tsx             # Board switcher sidebar
+│   ├── sidebar/
+│   │   └── BoardSidebar.tsx             # Board switcher sidebar
+│   ├── FeedbackButton.tsx               # Global floating feedback button
+│   └── NavigationProgress.tsx           # Top progress bar on navigation
 ├── contexts/
-│   └── UserContext.tsx                  # User identity (sessionStorage)
+│   ├── UserContext.tsx                  # User identity (sessionStorage)
+│   └── ThemeContext.tsx                 # Dark/Light theme (localStorage, toggles .dark on <html>)
 ├── lib/
 │   ├── supabase.ts                      # Browser + server Supabase clients
 │   ├── constants.ts                     # SECTION_CONFIGS, color constants
@@ -234,7 +245,8 @@ retro-board/
         ├── 002_canvas_elements.sql      # canvas_elements table
         ├── 003_canvas_element_interactions.sql  # Canvas element reactions/comments
         ├── 004_normalize_positions.sql  # Position normalization (absolute → fraction)
-        └── 005_sticky_note_formatting.sql  # Text formatting columns (is_bold/is_italic/is_underline)
+        ├── 005_sticky_note_formatting.sql  # Text formatting columns (is_bold/is_italic/is_underline)
+        └── 006_team_and_feedback.sql    # retro_sessions.team column; feedback table
 ```
 
 ## Conflict Resolution

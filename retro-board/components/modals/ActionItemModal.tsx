@@ -6,6 +6,7 @@ import { StickyNote, ActionItem } from '@/types'
 interface ActionItemModalProps {
   note: StickyNote | null
   initialTitle?: string
+  initialView?: 'list' | 'create'
   existingItems: ActionItem[]
   currentUser: { id: string; name: string } | null
   onClose: () => void
@@ -17,6 +18,7 @@ interface ActionItemModalProps {
 export default function ActionItemModal({
   note,
   initialTitle,
+  initialView = 'list',
   existingItems,
   currentUser,
   onClose,
@@ -29,7 +31,7 @@ export default function ActionItemModal({
   const [ownerName, setOwnerName] = useState(currentUser?.name ?? '')
   const [dueDate, setDueDate] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [view, setView] = useState<'list' | 'create'>('list')
+  const [view, setView] = useState<'list' | 'create'>(initialView)
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -67,24 +69,24 @@ export default function ActionItemModal({
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[85vh] flex flex-col">
         {/* Header */}
-        <div className="p-5 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="font-bold text-gray-800 text-lg">✅ Action Items</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+        <div className="p-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <h2 className="font-bold text-gray-800 dark:text-gray-100 text-lg">✅ Action Items</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl leading-none">×</button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-gray-200 dark:border-gray-700">
           <button
             onClick={() => setView('list')}
-            className={`flex-1 py-2.5 text-sm font-medium transition-all ${view === 'list' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`flex-1 py-2.5 text-sm font-medium transition-all ${view === 'list' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
           >
             All Items ({existingItems.length})
           </button>
           <button
             onClick={() => setView('create')}
-            className={`flex-1 py-2.5 text-sm font-medium transition-all ${view === 'create' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`flex-1 py-2.5 text-sm font-medium transition-all ${view === 'create' ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'}`}
           >
             + New Item
           </button>
@@ -106,7 +108,7 @@ export default function ActionItemModal({
                 </div>
               ) : (
                 existingItems.map((item) => (
-                  <div key={item.id} className="border border-gray-200 rounded-xl p-3 hover:border-gray-300 transition-colors">
+                  <div key={item.id} className="border border-gray-200 dark:border-gray-700 rounded-xl p-3 hover:border-gray-300 dark:hover:border-gray-600 transition-colors">
                     <div className="flex items-start gap-3">
                       <button
                         onClick={() => onUpdateStatus(item.id, statusNext[item.status])}
@@ -115,20 +117,20 @@ export default function ActionItemModal({
                         {item.status}
                       </button>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm font-medium text-gray-800 ${item.status === 'Done' ? 'line-through text-gray-400' : ''}`}>
+                        <p className={`text-sm font-medium text-gray-800 dark:text-gray-100 ${item.status === 'Done' ? 'line-through text-gray-400 dark:text-gray-500' : ''}`}>
                           {item.title}
                         </p>
                         {item.description && (
-                          <p className="text-xs text-gray-500 mt-0.5 truncate">{item.description}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{item.description}</p>
                         )}
-                        <div className="flex gap-3 mt-1 text-xs text-gray-400">
+                        <div className="flex gap-3 mt-1 text-xs text-gray-400 dark:text-gray-500">
                           {item.owner_name && <span>👤 {item.owner_name}</span>}
                           {item.due_date && <span>📅 {item.due_date}</span>}
                         </div>
                       </div>
                       <button
                         onClick={() => onDelete(item.id)}
-                        className="text-gray-300 hover:text-red-400 transition-colors shrink-0"
+                        className="text-gray-300 dark:text-gray-600 hover:text-red-400 transition-colors shrink-0"
                       >
                         ×
                       </button>
@@ -150,23 +152,23 @@ export default function ActionItemModal({
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title *</label>
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   placeholder="What needs to be done?"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                  className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                   rows={2}
                   placeholder="Optional details..."
                 />
@@ -174,22 +176,22 @@ export default function ActionItemModal({
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Owner</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Owner</label>
                   <input
                     type="text"
                     value={ownerName}
                     onChange={(e) => setOwnerName(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                     placeholder="Who's responsible?"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
                   <input
                     type="date"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
-                    className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+                    className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500 transition-colors bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
                   />
                 </div>
               </div>

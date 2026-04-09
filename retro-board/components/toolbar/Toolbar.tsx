@@ -9,6 +9,7 @@ import ConfirmDeleteModal from '@/components/modals/ConfirmDeleteModal'
 interface ToolbarProps {
   sessionName: string
   sprintNumber?: number
+  team?: string
   onlineUsers: OnlineUser[]
   currentUser: { id: string; name: string; color: string } | null
   onAddNote: (sectionId: string) => void
@@ -20,11 +21,13 @@ interface ToolbarProps {
   onDeleteBoard: () => void
   onShowAllComments: () => void
   totalCommentCount: number
+  onOpenSettings: () => void
 }
 
 export default function Toolbar({
   sessionName,
   sprintNumber,
+  team,
   onlineUsers,
   currentUser,
   onAddNote,
@@ -36,6 +39,7 @@ export default function Toolbar({
   onDeleteBoard,
   onShowAllComments,
   totalCommentCount,
+  onOpenSettings,
 }: ToolbarProps) {
   const [copied, setCopied] = useState(false)
   const [showSectionPicker, setShowSectionPicker] = useState(false)
@@ -66,17 +70,27 @@ export default function Toolbar({
           </svg>
         </button>
 
-        {/* Session Title + Delete */}
+        {/* Session Title + Settings + Delete */}
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-xl">🔄</span>
           <div className="min-w-0">
             <h1 className="font-bold text-gray-800 text-sm leading-tight truncate">
-              {sprintNumber ? `Sprint ${sprintNumber}` : sessionName}
+              {team ? `${team}` : ''}{team && sprintNumber ? ' · ' : ''}{sprintNumber ? `Sprint ${sprintNumber}` : (!team ? sessionName : '')}
             </h1>
-            {sprintNumber && (
+            {(team || sprintNumber) && (
               <p className="text-xs text-gray-500 truncate">{sessionName}</p>
             )}
           </div>
+          <button
+            onClick={onOpenSettings}
+            className="p-1 rounded text-gray-300 hover:text-blue-500 hover:bg-blue-50 transition-all"
+            title="Board settings"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </button>
           <button
             onClick={() => setShowDeleteModal(true)}
             className="p-1 rounded text-gray-300 hover:text-red-400 hover:bg-red-50 transition-all"

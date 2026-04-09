@@ -3,11 +3,13 @@
 import { useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { routerEvents } from '@/lib/navigation-events'
+import { useTheme } from '@/contexts/ThemeContext'
 
 export default function NavigationProgress() {
   const barRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
   const mountedRef = useRef(false)
+  const { isDark } = useTheme()
 
   // When navigation completes (pathname changes), finish the bar
   useEffect(() => {
@@ -52,7 +54,11 @@ export default function NavigationProgress() {
   return (
     <div
       ref={barRef}
-      className="fixed top-0 left-0 z-[9999] h-[3px] bg-gradient-to-r from-blue-500 via-purple-500 to-blue-400 rounded-r-full pointer-events-none"
+      className={`fixed top-0 left-0 z-[9999] h-[3px] rounded-r-full pointer-events-none ${
+        isDark
+          ? 'bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400'
+          : 'bg-gradient-to-r from-blue-500 via-purple-500 to-blue-400'
+      }`}
       style={{ width: '0%', opacity: 0 }}
     />
   )
