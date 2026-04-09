@@ -21,6 +21,7 @@ export async function POST(req: NextRequest) {
     .from('retro_sessions')
     .insert({
       name: body.name,
+      team: body.team,
       sprint_number: body.sprintNumber,
       start_date: body.startDate,
       end_date: body.endDate,

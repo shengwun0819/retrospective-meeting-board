@@ -3,6 +3,7 @@ export type SectionId = 'continue' | 'invent' | 'stop' | 'act'
 export interface RetroSession {
   id: string
   name: string
+  team?: string
   sprint_number?: number
   start_date?: string
   end_date?: string

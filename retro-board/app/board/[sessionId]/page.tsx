@@ -23,6 +23,7 @@ export default async function BoardPage({ params }: PageProps) {
     <Board
       sessionId={session.id}
       sessionName={session.name}
+      team={session.team}
       sprintNumber={session.sprint_number}
       boardId={board.id}
     />

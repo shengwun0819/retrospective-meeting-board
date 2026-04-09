@@ -118,7 +118,7 @@ export default function BoardSidebar({ currentSessionId, isOpen, onClose }: Boar
         {/* 新增看板捷徑 */}
         <div className="p-3 border-t border-gray-200 shrink-0 space-y-2">
           <Link
-            href="/"
+            href="/?create=1"
             onClick={onClose}
             className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-xl font-medium text-blue-600 hover:bg-blue-50 transition-colors border border-blue-200"
           >

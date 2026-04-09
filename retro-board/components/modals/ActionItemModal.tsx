@@ -6,6 +6,7 @@ import { StickyNote, ActionItem } from '@/types'
 interface ActionItemModalProps {
   note: StickyNote | null
   initialTitle?: string
+  initialView?: 'list' | 'create'
   existingItems: ActionItem[]
   currentUser: { id: string; name: string } | null
   onClose: () => void
@@ -17,6 +18,7 @@ interface ActionItemModalProps {
 export default function ActionItemModal({
   note,
   initialTitle,
+  initialView = 'list',
   existingItems,
   currentUser,
   onClose,
@@ -29,7 +31,7 @@ export default function ActionItemModal({
   const [ownerName, setOwnerName] = useState(currentUser?.name ?? '')
   const [dueDate, setDueDate] = useState('')
   const [submitting, setSubmitting] = useState(false)
-  const [view, setView] = useState<'list' | 'create'>('list')
+  const [view, setView] = useState<'list' | 'create'>(initialView)
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()

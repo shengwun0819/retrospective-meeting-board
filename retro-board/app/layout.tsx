@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
 import NavigationProgress from "@/components/NavigationProgress";
+import FeedbackButton from "@/components/FeedbackButton";
 import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
@@ -11,7 +12,7 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Retro Board",
+  title: "CoolBitX Retro Board",
   description: "Real-time sprint retrospective tool for agile teams",
 };
 
@@ -25,6 +26,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <NavigationProgress />
         <UserProvider>{children}</UserProvider>
+        <FeedbackButton />
         <Analytics />
       </body>
     </html>
