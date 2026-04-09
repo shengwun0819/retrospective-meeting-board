@@ -6,6 +6,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const supabase = createServerSupabaseClient()
   const raw = await req.json()
   // Strip virtual fields that don't exist in the DB table
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { reactions: _r, comments: _c, ...body } = raw
 
   const { data, error } = await supabase

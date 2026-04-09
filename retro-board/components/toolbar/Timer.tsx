@@ -16,8 +16,8 @@ export default function Timer() {
   useEffect(() => {
     if (!running) return
     if (remaining <= 0) {
-      setRunning(false)
-      return
+      const t = setTimeout(() => setRunning(false), 0)
+      return () => clearTimeout(t)
     }
     const interval = setInterval(() => setRemaining((r) => r - 1), 1000)
     return () => clearInterval(interval)
@@ -36,7 +36,6 @@ export default function Timer() {
 
   const minutes = Math.floor(remaining / 60)
   const seconds = remaining % 60
-  const pct = remaining / selected
   const isUrgent = remaining <= 30 && running
 
   return (

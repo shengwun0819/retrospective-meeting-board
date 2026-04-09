@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { RetroSession } from '@/types'
 
 interface BoardSidebarProps {
@@ -15,15 +14,15 @@ export default function BoardSidebar({ currentSessionId, isOpen, onClose }: Boar
   const [sessions, setSessions] = useState<RetroSession[]>([])
   const [loading, setLoading] = useState(false)
   const [showHelp, setShowHelp] = useState(false)
-  const router = useRouter()
 
   useEffect(() => {
     if (!isOpen) return
-    setLoading(true)
+    const t = setTimeout(() => setLoading(true), 0)
     fetch('/api/sessions')
       .then((r) => (r.ok ? r.json() : []))
       .then((data) => setSessions(data))
       .finally(() => setLoading(false))
+    return () => clearTimeout(t)
   }, [isOpen])
 
   const formatDate = (dateStr: string) => {

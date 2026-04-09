@@ -18,6 +18,8 @@ interface ToolbarProps {
   boardLink: string
   onToggleSidebar: () => void
   onDeleteBoard: () => void
+  onShowAllComments: () => void
+  totalCommentCount: number
 }
 
 export default function Toolbar({
@@ -32,9 +34,12 @@ export default function Toolbar({
   boardLink,
   onToggleSidebar,
   onDeleteBoard,
+  onShowAllComments,
+  totalCommentCount,
 }: ToolbarProps) {
   const [copied, setCopied] = useState(false)
   const [showSectionPicker, setShowSectionPicker] = useState(false)
+  const [sectionPickerPos, setSectionPickerPos] = useState({ top: 60, left: 0 })
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const sectionPickerRef = useRef<HTMLDivElement>(null)
 
@@ -91,7 +96,13 @@ export default function Toolbar({
         {/* Add Note — section picker */}
         <div className="relative" ref={sectionPickerRef}>
           <button
-            onClick={() => setShowSectionPicker(!showSectionPicker)}
+            onClick={() => {
+              if (sectionPickerRef.current) {
+                const rect = sectionPickerRef.current.getBoundingClientRect()
+                setSectionPickerPos({ top: rect.bottom + 4, left: rect.left })
+              }
+              setShowSectionPicker(!showSectionPicker)
+            }}
             className="flex items-center gap-1.5 bg-yellow-400 hover:bg-yellow-500 text-yellow-900 px-3 py-1.5 rounded-lg text-sm font-medium transition-all shadow-sm"
             title="Add sticky note"
           >
@@ -102,7 +113,7 @@ export default function Toolbar({
           {showSectionPicker && (
             <div
               className="fixed bg-white rounded-xl shadow-xl border border-gray-200 py-1 z-50 w-44"
-              style={{ top: sectionPickerRef.current ? sectionPickerRef.current.getBoundingClientRect().bottom + 4 : 60, left: sectionPickerRef.current ? sectionPickerRef.current.getBoundingClientRect().left : 0 }}
+              style={{ top: sectionPickerPos.top, left: sectionPickerPos.left }}
             >
               {SECTION_CONFIGS.map((s) => (
                 <button
@@ -124,6 +135,23 @@ export default function Toolbar({
         <Timer />
 
         <div className="flex-1" />
+
+        {/* All Comments */}
+        <button
+          onClick={onShowAllComments}
+          className="flex items-center gap-1.5 border border-gray-200 hover:border-gray-300 px-3 py-1.5 rounded-lg text-sm transition-all relative"
+          title="All comments"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span className="hidden sm:inline text-gray-600">Comments</span>
+          {totalCommentCount > 0 && (
+            <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
+              {totalCommentCount > 99 ? '99+' : totalCommentCount}
+            </span>
+          )}
+        </button>
 
         {/* Action Items */}
         <button

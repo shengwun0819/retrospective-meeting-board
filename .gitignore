@@ -1,0 +1,24 @@
+# dependencies
+retro-board/node_modules
+
+# next.js
+retro-board/.next/
+retro-board/.swc/
+
+# env files
+retro-board/.env
+
+# vercel
+retro-board/.vercel
+
+# typescript
+retro-board/*.tsbuildinfo
+retro-board/next-env.d.ts
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+
+# claude memory (local only)
+.claude/
