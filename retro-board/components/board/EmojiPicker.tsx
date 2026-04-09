@@ -56,6 +56,8 @@ export default function EmojiPicker({ onSelect, onClose }: EmojiPickerProps) {
         {EMOJI_CATEGORIES.map((cat, i) => (
           <button
             key={i}
+            role="tab"
+            aria-label={`category-${cat.label}`}
             onClick={() => setActiveCategory(i)}
             className={`text-base px-1.5 py-1 rounded-lg transition-colors ${activeCategory === i ? 'bg-gray-100' : 'hover:bg-gray-50'}`}
           >
