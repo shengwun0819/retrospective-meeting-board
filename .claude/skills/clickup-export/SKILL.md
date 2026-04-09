@@ -1,17 +1,17 @@
 ---
 name: clickup-export
-description: Export retro board editing area screenshot to ClickUp Docs (Sygna > Sygna Docs (master) > Sygna Docs (Tech) > Retro Record > Sprint {n}). Usage: /clickup-export <session-uuid>
+description: Export retro board editing area screenshot to ClickUp Docs. Usage: /clickup-export <session-uuid>
 argument-hint: <session-uuid>
 allowed-tools: Bash, Read
 ---
 
 Export the retro board session to ClickUp Docs as a new sub-page.
 
-**Target path:** Sygna Space → Sygna Docs (master) Folder → Sygna Docs (Tech) Doc → Retro Record page → new sub-page "Sprint {N}"
+**Target path:** you can record your targetpath of clickup
 
 **Known IDs (do not re-fetch):**
-- Document ID: `rcj35-3025`
-- Retro Record page ID: `rcj35-143178`
+- Document ID: `{your_clickup_doc_id}`
+- Retro Record page ID: `your_clickup_page_id`
 
 ---
 
@@ -40,8 +40,8 @@ Then use the Read tool to load the image at `/tmp/retro_sprint_$ARGUMENTS.png` t
 ### Step 3 — Create the ClickUp doc page
 
 Use the ClickUp MCP `clickup_create_document_page` tool with:
-- `document_id`: `rcj35-3025`
-- `parent_page_id`: `rcj35-143178`
+- `document_id`: `your_clickup_doc_id`
+- `parent_page_id`: `your_clickup_page_id`
 - `name`: `Sprint {N}` (from Step 1)
 - `content_format`: `text/md`
 - `content`: the stripped `markdownContent` from Step 1
