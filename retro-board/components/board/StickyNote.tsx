@@ -28,7 +28,6 @@ type FontSizeClass = typeof FONT_SIZES[number]
 
 export default function StickyNote({
   note,
-  currentUserId,
   onEdit,
   onDelete,
   onReaction,

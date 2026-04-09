@@ -26,7 +26,6 @@ import {
 } from '@/types'
 import { routerEvents } from '@/lib/navigation-events'
 import CursorOverlay from './CursorOverlay'
-import StickyNote from './StickyNote'
 import ResizableCanvas from './ResizableCanvas'
 import Toolbar from '@/components/toolbar/Toolbar'
 import BottomToolbar from '@/components/toolbar/BottomToolbar'
@@ -137,7 +136,7 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
       pos_x: (note.section_id === 'stop' || note.section_id === 'act') ? note.pos_x + dx / 100 : note.pos_x,
       pos_y: (note.section_id === 'invent' || note.section_id === 'act') ? note.pos_y + dy / 100 : note.pos_y,
     })))
-  }, [splitX, splitY]) // eslint-disable-line
+  }, [splitX, splitY])
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
@@ -327,7 +326,7 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
     }
     window.addEventListener('mousemove', handle)
     return () => window.removeEventListener('mousemove', handle)
-  }, [user])
+  }, [user, boardUserColor])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -748,8 +747,6 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
     if (!canvas) return
     const canvasW = canvas.offsetWidth
     const canvasH = canvas.offsetHeight
-    const splitXPx = canvasW * splitX / 100
-    const splitYPx = canvasH * splitY / 100
 
     const sectionNotes = notesRef.current.filter(n => n.section_id === sectionId)
     if (sectionNotes.length === 0) return

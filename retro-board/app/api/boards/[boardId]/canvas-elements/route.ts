@@ -27,6 +27,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ boa
   const { boardId } = await params
   const supabase = createServerSupabaseClient()
   const raw = await req.json()
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { reactions: _r, comments: _c, ...body } = raw
 
   const { data, error } = await supabase

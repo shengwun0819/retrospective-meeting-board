@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { CanvasElement as CEType, Reaction } from '@/types'
+import { CanvasElement as CEType } from '@/types'
 import { REACTIONS } from '@/lib/constants'
 
 interface CanvasElementProps {
@@ -28,7 +28,6 @@ export default function CanvasElement({
   onSelect,
   onUpdate,
   onDelete,
-  currentUserId,
   onReaction,
   onComment,
   onActionItem,

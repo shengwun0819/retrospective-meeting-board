@@ -29,7 +29,7 @@ export default function NavigationProgress() {
       }, 300)
     }, 150)
     return () => clearTimeout(timer)
-  }, [pathname]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [pathname])
 
   // Listen for navigation start
   useEffect(() => {
