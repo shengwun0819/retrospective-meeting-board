@@ -115,7 +115,7 @@ Export uses a **Claude Code MCP skill** pattern — the web app does not hold a 
 3. The `clickup-export` skill fetches `GET /api/sessions/[id]/export`, then calls `clickup_create_document_page`
 
 Known IDs (do not re-fetch):
-- Document ID: `rcj35-3025`
-- Retro Record page ID: `rcj35-143178`
+- Document ID: `your_clickup_doc_id`
+- Retro Record page ID: `your_clickup_page_id`
 
-Target path: `Sygna > Sygna Docs (master) > Sygna Docs (Tech) > Retro Record > Sprint {N}`
+Target path: `your_clickup_target_path`
