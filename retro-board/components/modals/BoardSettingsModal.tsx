@@ -39,23 +39,23 @@ export default function BoardSettingsModal({ session, onClose, onSave }: BoardSe
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm flex flex-col">
-        <div className="p-5 border-b border-gray-200 flex items-center justify-between">
-          <h2 className="font-bold text-gray-800 text-lg">⚙️ Board Settings</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm flex flex-col">
+        <div className="p-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <h2 className="font-bold text-gray-800 dark:text-gray-100 text-lg">⚙️ Board Settings</h2>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl leading-none">×</button>
         </div>
 
         <form onSubmit={handleSave} className="p-5 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Team</label>
-            <p className="text-xs text-gray-400 mb-1.5">Available: {TEAMS.join(' · ')}</p>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Team</label>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-1.5">Available: {TEAMS.join(' · ')}</p>
             <input
               type="text"
               value={team}
               onChange={(e) => handleTeamChange(e.target.value)}
               list="settings-team-options"
               placeholder="e.g. Sygna"
-              className={`w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none transition-colors ${teamError ? 'border-red-400 focus:border-red-500' : 'border-gray-200 focus:border-blue-500'}`}
+              className={`w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none transition-colors bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 ${teamError ? 'border-red-400 focus:border-red-500' : 'border-gray-200 dark:border-gray-700 focus:border-blue-500'}`}
             />
             <datalist id="settings-team-options">
               {TEAMS.map(t => <option key={t} value={t} />)}
@@ -64,14 +64,14 @@ export default function BoardSettingsModal({ session, onClose, onSave }: BoardSe
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Sprint Number</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sprint Number</label>
             <input
               type="number"
               value={sprintNumber}
               onChange={(e) => setSprintNumber(e.target.value)}
               placeholder="e.g. 42"
               min={1}
-              className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 transition-colors bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             />
           </div>
 
@@ -79,7 +79,7 @@ export default function BoardSettingsModal({ session, onClose, onSave }: BoardSe
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl transition-all text-sm"
+              className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium py-2.5 rounded-xl transition-all text-sm"
             >
               Cancel
             </button>

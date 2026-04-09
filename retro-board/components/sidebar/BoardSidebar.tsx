@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { RetroSession } from '@/types'
+import { routerEvents } from '@/lib/navigation-events'
 
 interface BoardSidebarProps {
   currentSessionId: string
@@ -42,18 +43,18 @@ export default function BoardSidebar({ currentSessionId, isOpen, onClose }: Boar
 
       {/* Sidebar 本體 */}
       <aside
-        className={`fixed left-0 top-0 bottom-0 w-72 bg-white shadow-2xl z-40 flex flex-col transform transition-transform duration-300 ease-in-out ${
+        className={`fixed left-0 top-0 bottom-0 w-72 bg-white dark:bg-gray-900 shadow-2xl z-40 flex flex-col transform transition-transform duration-300 ease-in-out ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* 標題列 */}
-        <div className="h-14 px-4 border-b border-gray-200 flex items-center justify-between shrink-0">
-          <span className="font-bold text-xl text-gray-800 flex items-center gap-2">
+        <div className="h-14 px-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between shrink-0">
+          <span className="font-bold text-xl text-gray-800 dark:text-gray-100 flex items-center gap-2">
             <span>🗂️</span> All Boards
           </span>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors text-xl leading-none w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100"
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors text-xl leading-none w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-800"
           >
             ×
           </button>
@@ -62,15 +63,15 @@ export default function BoardSidebar({ currentSessionId, isOpen, onClose }: Boar
         {/* 回首頁按鈕 */}
         <Link
           href="/"
-          className="mx-3 mt-3 flex items-center gap-2 px-3 py-2.5 rounded-xl text-xl font-medium text-gray-600 hover:bg-gray-100 transition-colors border border-gray-200"
-          onClick={onClose}
+          className="mx-3 mt-3 flex items-center gap-2 px-3 py-2.5 rounded-xl text-xl font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors border border-gray-200 dark:border-gray-700"
+          onClick={() => { routerEvents.start(); onClose() }}
         >
           <span>🏠</span>
           <span>Home</span>
         </Link>
 
         <div className="px-3 mt-4 mb-2">
-          <p className="text-sm font-semibold text-gray-400 uppercase tracking-wider">Recent Boards</p>
+          <p className="text-sm font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Recent Boards</p>
         </div>
 
         {/* 看板列表 */}
@@ -86,11 +87,11 @@ export default function BoardSidebar({ currentSessionId, isOpen, onClose }: Boar
                 <Link
                   key={session.id}
                   href={`/board/${session.id}`}
-                  onClick={onClose}
+                  onClick={() => { routerEvents.start(); onClose() }}
                   className={`block px-3 py-2.5 rounded-xl text-xl transition-colors ${
                     isCurrent
-                      ? 'bg-blue-50 border border-blue-200 text-blue-700'
-                      : 'hover:bg-gray-50 text-gray-700 border border-transparent'
+                      ? 'bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300'
+                      : 'hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 border border-transparent'
                   }`}
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -105,7 +106,7 @@ export default function BoardSidebar({ currentSessionId, isOpen, onClose }: Boar
                     </div>
                   </div>
                   {isCurrent && (
-                    <span className="inline-block mt-1 text-xs bg-blue-100 text-blue-600 rounded-full px-2 py-0.5">
+                    <span className="inline-block mt-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded-full px-2 py-0.5">
                       Current
                     </span>
                   )}
@@ -116,17 +117,17 @@ export default function BoardSidebar({ currentSessionId, isOpen, onClose }: Boar
         </div>
 
         {/* 新增看板捷徑 */}
-        <div className="p-3 border-t border-gray-200 shrink-0 space-y-2">
+        <div className="p-3 border-t border-gray-200 dark:border-gray-700 shrink-0 space-y-2">
           <Link
             href="/?create=1"
-            onClick={onClose}
-            className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-xl font-medium text-blue-600 hover:bg-blue-50 transition-colors border border-blue-200"
+            onClick={() => { routerEvents.start(); onClose() }}
+            className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-xl font-medium text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors border border-blue-200 dark:border-blue-800"
           >
             <span>＋</span> New Board
           </Link>
           <button
             onClick={() => setShowHelp(true)}
-            className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-xl font-medium text-gray-500 hover:bg-gray-50 transition-colors border border-gray-100"
+            className="flex items-center justify-center gap-2 w-full py-2 rounded-xl text-xl font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border border-gray-100 dark:border-gray-700"
           >
             <span>💡</span> Help
           </button>
@@ -136,16 +137,16 @@ export default function BoardSidebar({ currentSessionId, isOpen, onClose }: Boar
       {/* Help Modal */}
       {showHelp && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm" onClick={() => setShowHelp(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-96 max-h-[80vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-96 max-h-[80vh] overflow-y-auto p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold text-lg text-gray-800">Help</h2>
-              <button onClick={() => setShowHelp(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100">×</button>
+              <h2 className="font-bold text-lg text-gray-800 dark:text-gray-100">Help</h2>
+              <button onClick={() => setShowHelp(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-xl leading-none w-7 h-7 flex items-center justify-center rounded hover:bg-gray-100 dark:hover:bg-gray-700">×</button>
             </div>
 
-            <div className="space-y-4 text-sm text-gray-700">
+            <div className="space-y-4 text-sm text-gray-700 dark:text-gray-300">
               <section>
-                <h3 className="font-semibold text-gray-800 mb-1">Sticky Notes</h3>
-                <ul className="space-y-1 text-gray-600 list-none pl-0">
+                <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-1">Sticky Notes</h3>
+                <ul className="space-y-1 text-gray-600 dark:text-gray-400 list-none pl-0">
                   <li>• Double-click to edit content</li>
                   <li>• Drag notes to different sections</li>
                   <li>• Click a note to keep the toolbar visible</li>
@@ -154,8 +155,8 @@ export default function BoardSidebar({ currentSessionId, isOpen, onClose }: Boar
               </section>
 
               <section>
-                <h3 className="font-semibold text-gray-800 mb-1">Keyboard Shortcuts</h3>
-                <ul className="space-y-1 text-gray-600 list-none pl-0">
+                <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-1">Keyboard Shortcuts</h3>
+                <ul className="space-y-1 text-gray-600 dark:text-gray-400 list-none pl-0">
                   <li>• Ctrl+Z to undo</li>
                   <li>• Ctrl+Shift+Z to redo</li>
                   <li>• Ctrl+C to copy a hovered note</li>
@@ -165,15 +166,15 @@ export default function BoardSidebar({ currentSessionId, isOpen, onClose }: Boar
               </section>
 
               <section>
-                <h3 className="font-semibold text-gray-800 mb-1">Canvas Tools (bottom toolbar)</h3>
-                <ul className="space-y-1 text-gray-600 list-none pl-0">
+                <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-1">Canvas Tools (bottom toolbar)</h3>
+                <ul className="space-y-1 text-gray-600 dark:text-gray-400 list-none pl-0">
                   <li>• Select, Text, Rect, Circle, Arrow — drag to create</li>
                 </ul>
               </section>
 
               <section>
-                <h3 className="font-semibold text-gray-800 mb-1">Collaboration</h3>
-                <ul className="space-y-1 text-gray-600 list-none pl-0">
+                <h3 className="font-semibold text-gray-800 dark:text-gray-100 mb-1">Collaboration</h3>
+                <ul className="space-y-1 text-gray-600 dark:text-gray-400 list-none pl-0">
                   <li>• Hover reactions to see who left them</li>
                   <li>• Comments 💬</li>
                   <li>• Action items ✅</li>

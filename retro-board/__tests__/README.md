@@ -11,8 +11,9 @@ npm run test:ci       # CI 模式（含 coverage 報告，不進入 watch）
 
 | 檔案 | 說明 |
 |------|------|
-| `jest.config.ts` | Jest 設定，使用 `next/jest` 整合 Next.js、設定 jsdom 環境與 `@/` 路徑別名 |
+| `jest.config.ts` | Jest 設定，使用 `babel-jest` + `next/babel` preset，設定 jsdom 環境與 `@/` 路徑別名 |
 | `jest.setup.ts` | 全域引入 `@testing-library/jest-dom`，啟用 `toBeInTheDocument()` 等 matcher |
+| `tsconfig.test.json` | 測試專用 TypeScript 設定，引入 `jest` 與 `@testing-library/jest-dom` 型別 |
 
 ---
 
@@ -115,6 +116,77 @@ npm run test:ci       # CI 模式（含 coverage 報告，不進入 watch）
 
 ---
 
+### `__tests__/components/ActionItemModal.test.tsx`
+
+測試對象：`components/modals/ActionItemModal.tsx`
+
+Action Item 管理 Modal，可列出現有 items 或新增一筆；支援 `initialView` prop 讓呼叫方直接指定開啟 create 表單。
+
+| 測試案例 | 驗證內容 |
+|---------|---------|
+| 預設開啟 list view | "All Items" tab 為 active |
+| 無 items 時顯示空狀態 | "No action items yet" |
+| 顯示現有 items | item 標題出現在列表中 |
+| tab 顯示 item 數量 | "All Items (2)" |
+| 點擊 × 呼叫 onClose | Modal 關閉 |
+| 點擊 status badge 呼叫 onUpdateStatus | 傳入 item id 與下一個 status |
+| 點擊 item 的 × 呼叫 onDelete | 傳入 item id |
+| `initialView='create'` 直接開啟表單 | "+ New Item" tab active，Title input 出現 |
+| 從 note 預填 title | note.content 填入 Title 欄位 |
+| 顯示來源 note 預覽 | "From sticky note:" 文字 |
+| Create 按鈕在 title 空白時 disabled | 防止空白提交 |
+| 輸入 title 後 Create 按鈕 enabled | 可正常提交 |
+| 提交呼叫 onCreate，payload 正確 | title、status、source_sticky_note_id 正確 |
+| 提交後回到 list view | 顯示空狀態或新增的 item |
+| 點擊 "+ New Item" tab 切換到 create | 從 list 切換到 create |
+| 點擊 "All Items" tab 切換回 list | 從 create 切換回 list |
+
+---
+
+### `__tests__/components/FeedbackButton.test.tsx`
+
+測試對象：`components/FeedbackButton.tsx`
+
+右下角浮動 Feedback 按鈕，點擊後開啟 Modal 讓使用者填寫意見，Submit 時 POST 至 `/api/feedback`。
+
+| 測試案例 | 驗證內容 |
+|---------|---------|
+| 顯示浮動 Feedback 按鈕 | `role="button"` 含 "Feedback" 文字 |
+| 初始不顯示 Modal | textarea 不在 DOM 中 |
+| 點擊按鈕開啟 Modal | "Share Your Feedback" 標題出現 |
+| 點擊 Cancel 關閉 Modal | Modal 消失 |
+| 點擊 × 關閉 Modal | Modal 消失 |
+| Send 按鈕初始為 disabled | textarea 空白時無法送出 |
+| 輸入後 Send 按鈕 enabled | 有內容時可點擊 |
+| 點擊 Send 呼叫 POST /api/feedback | fetch 被呼叫，body 含正確 content |
+| 送出後顯示 "Sent!" | 成功 feedback |
+
+---
+
+### `__tests__/components/BoardSettingsModal.test.tsx`
+
+測試對象：`components/modals/BoardSettingsModal.tsx`
+
+Board 內的設定 Modal（⚙️ 按鈕），可編輯 Team 與 Sprint Number，Team 欄位限制於四個有效選項。
+
+| 測試案例 | 驗證內容 |
+|---------|---------|
+| 顯示現有 team 與 sprint 預填值 | input 含 "Sygna" / "42" |
+| 無資料時顯示空值 | input 為空 |
+| 點擊 Cancel 呼叫 onClose | Modal 關閉 |
+| 點擊 × 呼叫 onClose | Modal 關閉 |
+| 輸入無效 team 顯示錯誤訊息 | "Please enter one of: ..." |
+| 改回有效 team 後錯誤消失 | validation error 消除 |
+| Save 按鈕在 team 無效時 disabled | 防止無效提交 |
+| 提交呼叫 onSave，payload 正確 | team 與 sprint_number 正確傳入 |
+| 所有有效 team 名稱無驗證錯誤 | Sygna / Turing / Mobius / Crypto platform 均合法 |
+
+---
+
 ## Coverage
 
 CI 模式（`npm run test:ci`）會產生 coverage 報告至 `coverage/` 資料夾，並由 GitHub Actions 上傳為 artifact（保留 7 天）。
+
+Coverage 範圍設定於 `jest.config.ts`：
+- `lib/**/*.ts`
+- `components/**/*.tsx`（排除 `*.stories.tsx`）

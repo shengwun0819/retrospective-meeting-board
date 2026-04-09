@@ -32,7 +32,7 @@ export default function FeedbackButton() {
       {/* Floating button */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-40 flex items-center gap-1.5 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2.5 rounded-full shadow-lg border border-gray-200 transition-all hover:shadow-xl"
+        className="fixed bottom-5 right-5 z-40 flex items-center gap-1.5 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium px-4 py-2.5 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 transition-all hover:shadow-xl"
         title="Send feedback"
       >
         💬 Feedback
@@ -41,17 +41,17 @@ export default function FeedbackButton() {
       {/* Modal */}
       {open && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md flex flex-col">
-            <div className="p-5 border-b border-gray-200 flex items-center justify-between">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-md flex flex-col">
+            <div className="p-5 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <div>
-                <h2 className="font-bold text-gray-800 text-lg">💬 Share Your Feedback</h2>
-                <p className="text-xs text-gray-400 mt-0.5">Help us improve the retro board experience</p>
+                <h2 className="font-bold text-gray-800 dark:text-gray-100 text-lg">💬 Share Your Feedback</h2>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Help us improve the retro board experience</p>
               </div>
-              <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+              <button onClick={() => setOpen(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 text-2xl leading-none">×</button>
             </div>
 
             <div className="p-5 space-y-4">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Tell us what you liked, what could be better, or any ideas you have. All feedback is welcome!
               </p>
               <textarea
@@ -59,15 +59,15 @@ export default function FeedbackButton() {
                 onChange={(e) => setFeedback(e.target.value)}
                 placeholder="e.g. It would be great if I could filter notes by author..."
                 rows={5}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                className="w-full border border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-blue-500 transition-colors resize-none bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 autoFocus
               />
             </div>
 
-            <div className="p-4 border-t border-gray-200 flex gap-3">
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex gap-3">
               <button
                 onClick={() => setOpen(false)}
-                className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2.5 rounded-xl transition-all text-sm"
+                className="flex-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium py-2.5 rounded-xl transition-all text-sm"
               >
                 Cancel
               </button>

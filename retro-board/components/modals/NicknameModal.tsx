@@ -27,11 +27,11 @@ export default function NicknameModal({ onConfirm, defaultName = '' }: NicknameM
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 max-w-sm w-full">
         <div className="text-center mb-6">
           <div className="text-5xl mb-3">👋</div>
-          <h2 className="text-2xl font-bold text-gray-800">Your display name</h2>
-          <p className="text-gray-500 mt-2 text-sm">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Your display name</h2>
+          <p className="text-gray-500 dark:text-gray-400 mt-2 text-sm">
             This name will appear on your sticky notes and comments.
             <br />
             You can use your Google name or set a custom one.
@@ -44,7 +44,7 @@ export default function NicknameModal({ onConfirm, defaultName = '' }: NicknameM
             value={name}
             onChange={(e) => { setName(e.target.value); setError('') }}
             placeholder="e.g. Kevin"
-            className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-gray-800 focus:outline-none focus:border-blue-500 transition-colors text-center text-lg font-medium"
+            className="w-full border-2 border-gray-200 dark:border-gray-700 rounded-xl px-4 py-3 text-gray-800 dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-none focus:border-blue-500 transition-colors text-center text-lg font-medium placeholder-gray-400 dark:placeholder-gray-500"
             autoFocus
             maxLength={30}
           />
@@ -58,7 +58,7 @@ export default function NicknameModal({ onConfirm, defaultName = '' }: NicknameM
           </button>
         </form>
 
-        <p className="text-xs text-gray-400 text-center mt-4">
+        <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-4">
           Your name is only saved for this browser session
         </p>
       </div>

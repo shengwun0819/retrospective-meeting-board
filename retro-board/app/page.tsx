@@ -2,10 +2,11 @@
 
 import ConfirmDeleteModal from '@/components/modals/ConfirmDeleteModal'
 import { useUser } from '@/contexts/UserContext'
+import { useTheme } from '@/contexts/ThemeContext'
 import { routerEvents } from '@/lib/navigation-events'
 import { RetroSession } from '@/types'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Suspense, useCallback, useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 
 const TEAMS = ['Sygna', 'Turing', 'Mobius', 'Crypto platform']
 
@@ -13,13 +14,11 @@ function HomePageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { authName, authEmail, signOut } = useUser()
+  const { theme, isDark, toggleTheme } = useTheme()
   const [sessions, setSessions] = useState<RetroSession[]>([])
   const [loadingSessions, setLoadingSessions] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [joinId, setJoinId] = useState('')
-
-  // Theme
-  const [theme, setTheme] = useState<'light' | 'dark'>('light')
 
   // Form state
   const [sprintNumber, setSprintNumber] = useState('')
@@ -30,12 +29,6 @@ function HomePageInner() {
   // Delete state
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [confirmSession, setConfirmSession] = useState<RetroSession | null>(null)
-
-  // Load theme from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('retro-theme') as 'light' | 'dark' | null
-    if (saved) setTheme(saved)
-  }, [])
 
   // Auto-expand form if ?create=1
   useEffect(() => {
@@ -48,14 +41,6 @@ function HomePageInner() {
       .then((data) => Array.isArray(data) && setSessions(data))
       .catch(() => {})
       .finally(() => setLoadingSessions(false))
-  }, [])
-
-  const toggleTheme = useCallback(() => {
-    setTheme(t => {
-      const next = t === 'light' ? 'dark' : 'light'
-      localStorage.setItem('retro-theme', next)
-      return next
-    })
   }, [])
 
   const navigate = (path: string) => {
@@ -111,8 +96,6 @@ function HomePageInner() {
       setDeletingId(null)
     }
   }
-
-  const isDark = theme === 'dark'
 
   return (
     <div
@@ -267,17 +250,17 @@ function HomePageInner() {
               {loadingSessions ? (
                 <div className="space-y-2">
                   {[...Array(3)].map((_, i) => (
-                    <div key={i} className="flex items-center px-4 py-3 rounded-xl border border-gray-100">
+                    <div key={i} className={`flex items-center px-4 py-3 rounded-xl border ${isDark ? 'border-gray-700' : 'border-gray-100'}`}>
                       <div className="flex-1 space-y-2">
-                        <div className="h-3.5 bg-gray-100 rounded animate-pulse w-2/3" />
-                        <div className="h-2.5 bg-gray-100 rounded animate-pulse w-1/3" />
+                        <div className={`h-3.5 rounded animate-pulse w-2/3 ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`} />
+                        <div className={`h-2.5 rounded animate-pulse w-1/3 ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`} />
                       </div>
-                      <div className="h-3 w-4 bg-gray-100 rounded animate-pulse" />
+                      <div className={`h-3 w-4 rounded animate-pulse ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`} />
                     </div>
                   ))}
                 </div>
               ) : (
-              <div className="space-y-2">
+              <div className="space-y-2 animate-fade-in">
                 {sessions.slice(0, 5).map((s) => (
                   <div key={s.id} className="group flex items-center">
                     <button
