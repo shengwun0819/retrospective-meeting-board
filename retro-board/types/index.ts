@@ -29,6 +29,9 @@ export interface StickyNote {
   pos_y: number
   width?: number
   height?: number
+  is_bold?: boolean
+  is_italic?: boolean
+  is_underline?: boolean
   created_at: string
   updated_at: string
   reactions?: Reaction[]

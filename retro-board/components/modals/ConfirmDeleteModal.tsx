@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 interface ConfirmDeleteModalProps {
   boardName: string
@@ -9,6 +9,10 @@ interface ConfirmDeleteModalProps {
 }
 
 export default function ConfirmDeleteModal({ boardName, onConfirm, onCancel }: ConfirmDeleteModalProps) {
+  const [inputValue, setInputValue] = useState('')
+  const expectedValue = `Delete ${boardName}`
+  const isConfirmed = inputValue === expectedValue
+
   // Close on Escape
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -44,14 +48,31 @@ export default function ConfirmDeleteModal({ boardName, onConfirm, onCancel }: C
         <p className="text-sm font-semibold text-gray-800 text-center mb-4">
           &ldquo;{boardName}&rdquo;
         </p>
-        <p className="text-xs text-gray-400 text-center mb-6">
+        <p className="text-xs text-gray-400 text-center mb-4">
           All sticky notes, comments, and action items will be deleted<br />and cannot be recovered.
         </p>
+
+        {/* Confirmation input */}
+        <div className="mb-5">
+          <p className="text-xs text-gray-500 mb-1.5">
+            To confirm, type <span className="font-mono font-semibold text-gray-700">{expectedValue}</span>
+          </p>
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && isConfirmed) onConfirm() }}
+            placeholder={expectedValue}
+            className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-red-300 focus:ring-2 focus:ring-red-100 transition-all"
+            autoFocus
+          />
+        </div>
 
         <div className="flex gap-3">
           <button
             onClick={onConfirm}
-            className="flex-1 bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold py-2.5 rounded-xl transition-colors"
+            disabled={!isConfirmed}
+            className="flex-1 bg-red-500 hover:bg-red-600 active:bg-red-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-xl transition-colors"
           >
             Delete
           </button>

@@ -11,6 +11,7 @@ export default function HomePage() {
   const router = useRouter()
   const { authName, authEmail, signOut } = useUser()
   const [sessions, setSessions] = useState<RetroSession[]>([])
+  const [loadingSessions, setLoadingSessions] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [joinId, setJoinId] = useState('')
 
@@ -30,6 +31,7 @@ export default function HomePage() {
       .then((r) => r.json())
       .then((data) => Array.isArray(data) && setSessions(data))
       .catch(() => {})
+      .finally(() => setLoadingSessions(false))
   }, [])
 
   const navigate = (path: string) => {
@@ -221,9 +223,22 @@ export default function HomePage() {
         </div>
 
         {/* Recent Sessions */}
-        {sessions.length > 0 && (
+        {(loadingSessions || sessions.length > 0) && (
           <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
             <h2 className="text-lg font-bold text-gray-800 mb-4">🕐 Recent Sessions</h2>
+            {loadingSessions ? (
+              <div className="space-y-2">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="flex items-center px-4 py-3 rounded-xl border border-gray-100">
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3.5 bg-gray-100 rounded animate-pulse w-2/3" />
+                      <div className="h-2.5 bg-gray-100 rounded animate-pulse w-1/3" />
+                    </div>
+                    <div className="h-3 w-4 bg-gray-100 rounded animate-pulse" />
+                  </div>
+                ))}
+              </div>
+            ) : (
             <div className="space-y-2">
               {sessions.slice(0, 5).map((s) => (
                 <div key={s.id} className="group flex items-center">
@@ -254,6 +269,7 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
+            )}
           </div>
         )}
       </div>

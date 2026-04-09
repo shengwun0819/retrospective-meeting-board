@@ -32,11 +32,13 @@ import Toolbar from '@/components/toolbar/Toolbar'
 import BottomToolbar from '@/components/toolbar/BottomToolbar'
 import NicknameModal from '@/components/modals/NicknameModal'
 import CommentPanel from '@/components/modals/CommentPanel'
+import AllCommentsPanel from '@/components/modals/AllCommentsPanel'
 import ActionItemModal from '@/components/modals/ActionItemModal'
 import ExportModal from '@/components/modals/ExportModal'
 import BoardSidebar from '@/components/sidebar/BoardSidebar'
 import { useUser } from '@/contexts/UserContext'
 import { RetroExportPayload } from '@/lib/clickup'
+import { calculateAutoArrangePositions } from '@/lib/autoArrange'
 
 interface BoardProps {
   sessionId: string
@@ -88,6 +90,7 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
   const [actionItemNote, setActionItemNote] = useState<StickyNoteType | null>(null)
   const [actionItemElement, setActionItemElement] = useState<CanvasElement | null>(null)
   const [showActionItems, setShowActionItems] = useState(false)
+  const [showAllComments, setShowAllComments] = useState(false)
   const [showExport, setShowExport] = useState(false)
   const [exportPayload, setExportPayload] = useState<RetroExportPayload | null>(null)
   const [exportLoading, setExportLoading] = useState(false)
@@ -396,6 +399,9 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
         content: note.content,
         color: note.color,
         author_name: note.author_name,
+        is_bold: note.is_bold ?? false,
+        is_italic: note.is_italic ?? false,
+        is_underline: note.is_underline ?? false,
         ...(note.width !== undefined ? { width: note.width } : {}),
         ...(note.height !== undefined ? { height: note.height } : {}),
       }),
@@ -745,31 +751,10 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
     const splitXPx = canvasW * splitX / 100
     const splitYPx = canvasH * splitY / 100
 
-    const inRight = sectionId === 'stop' || sectionId === 'act'
-    const inBottom = sectionId === 'invent' || sectionId === 'act'
-    const originX = (inRight ? splitXPx : 0) + 20
-    const originY = (inBottom ? splitYPx : 0) + 70
-
     const sectionNotes = notesRef.current.filter(n => n.section_id === sectionId)
     if (sectionNotes.length === 0) return
 
-    // Group by author_name, preserving first-appearance order, then sort alphabetically
-    const byAuthor: Record<string, StickyNoteType[]> = {}
-    for (const note of sectionNotes) {
-      if (!byAuthor[note.author_name]) byAuthor[note.author_name] = []
-      byAuthor[note.author_name].push(note)
-    }
-    const authors = Object.keys(byAuthor).sort()
-
-    const COL_W = 190
-    const ROW_H = 145
-    const updates: { id: string; pos_x: number; pos_y: number }[] = []
-
-    authors.forEach((author, colIdx) => {
-      byAuthor[author].forEach((note, rowIdx) => {
-        updates.push({ id: note.id, pos_x: (originX + colIdx * COL_W) / canvasW, pos_y: (originY + rowIdx * ROW_H) / canvasH })
-      })
-    })
+    const updates = calculateAutoArrangePositions(sectionId, sectionNotes, canvasW, canvasH, splitX, splitY)
 
     // Optimistic update
     setNotes(prev => prev.map(n => {
@@ -802,6 +787,8 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
         boardLink={typeof window !== 'undefined' ? window.location.href : ''}
         onToggleSidebar={() => setSidebarOpen(v => !v)}
         onDeleteBoard={handleDeleteBoard}
+        onShowAllComments={() => setShowAllComments(true)}
+        totalCommentCount={notes.reduce((sum, n) => sum + (n.comments?.length ?? 0), 0)}
       />
 
       <main className="pt-14 overflow-x-auto overflow-y-hidden">
@@ -860,6 +847,15 @@ export default function Board({ sessionId, sessionName, sprintNumber, boardId }:
       {showNicknameModal && <NicknameModal defaultName={authName} onConfirm={(name) => { setUserName(name); setShowNicknameModal(false) }} />}
       {commentNote && <CommentPanel note={commentNote} currentUser={user} onClose={() => setCommentNote(null)} onAddComment={handleAddComment} onDeleteComment={handleDeleteComment} onEditComment={handleEditComment} />}
       {commentElement && <CommentPanel canvasElement={commentElement} currentUser={user} onClose={() => setCommentElement(null)} onAddComment={handleAddElementComment} onDeleteComment={handleDeleteComment} onEditComment={handleEditComment} />}
+      {showAllComments && (
+        <AllCommentsPanel
+          notes={notes}
+          currentUser={user ? { ...user, color: boardUserColor } : null}
+          onClose={() => setShowAllComments(false)}
+          onOpenNote={(note) => { setShowAllComments(false); setCommentElement(null); setCommentNote(note) }}
+          onDeleteComment={handleDeleteComment}
+        />
+      )}
       {showActionItems && (
         <ActionItemModal
           note={actionItemNote}

@@ -6,8 +6,10 @@ A real-time Sprint retrospective tool built for agile teams. Sign in and share t
 
 ### Whiteboard & Sticky Notes
 - **Resizable 2×2 board**: Continue / Stop / Invent / Act (CSIA framework). Drag the dividers to resize sections — sticky notes follow along.
-- **Sticky notes**: Create, inline-edit (double-click), delete (Delete key or trash icon), drag across sections, change color and font size.
-- **Emoji reactions**: 👍 ❤️ 😂 🎉 🤔 with optimistic updates (no refresh needed).
+- **Sticky notes**: Create, inline-edit (double-click), delete (Delete key or trash icon), drag across sections, change color and font size, resize by dragging corners.
+- **Text formatting**: Bold (B), Italic (I), Underline (U) buttons in the hover toolbar — persisted to DB.
+- **Emoji reactions**: 👍 ❤️ 😂 🎉 🤔 quick picks + ＋ button opens a full emoji picker (8 categories) with optimistic updates.
+- **Delete confirmation**: Deleting a board requires typing `Delete {board_name}` in the confirmation dialog.
 - **Comments**: Each sticky note supports a threaded comment panel.
 - **Action items**: Create trackable action items from sticky notes (Open → InProgress → Done).
 
@@ -78,6 +80,7 @@ Go to [supabase.com](https://supabase.com) and create a new project. Run the fol
 2. `supabase/migrations/002_canvas_elements.sql` — creates canvas_elements (text, rect, circle, arrow)
 3. `supabase/migrations/003_canvas_element_interactions.sql` — reactions and comments on canvas elements
 4. `supabase/migrations/004_normalize_positions.sql` — normalizes sticky note positions (absolute pixels → 0.0–1.0 fractions)
+5. `supabase/migrations/005_sticky_note_formatting.sql` — adds text formatting columns (is_bold / is_italic / is_underline)
 
 All RLS policies are `allow_all`. Access is controlled at the application layer via Supabase Auth + middleware.
 
@@ -200,7 +203,8 @@ retro-board/
 │   │   ├── Board.tsx                    # Main board: state, Realtime, DnD
 │   │   ├── ResizableCanvas.tsx          # Resizable 2×2 canvas container
 │   │   ├── Section.tsx                  # Quadrant section
-│   │   ├── StickyNote.tsx               # Draggable sticky note
+│   │   ├── StickyNote.tsx               # Draggable sticky note (B/I/U formatting, resize)
+│   │   ├── EmojiPicker.tsx              # Full emoji picker (8 categories)
 │   │   ├── CanvasElement.tsx            # Canvas element (text/rect/circle/arrow)
 │   │   └── CursorOverlay.tsx            # Live cursor display
 │   ├── toolbar/
@@ -229,7 +233,8 @@ retro-board/
         ├── 001_initial.sql              # Main table schema
         ├── 002_canvas_elements.sql      # canvas_elements table
         ├── 003_canvas_element_interactions.sql  # Canvas element reactions/comments
-        └── 004_normalize_positions.sql  # Position normalization (absolute → fraction)
+        ├── 004_normalize_positions.sql  # Position normalization (absolute → fraction)
+        └── 005_sticky_note_formatting.sql  # Text formatting columns (is_bold/is_italic/is_underline)
 ```
 
 ## Conflict Resolution

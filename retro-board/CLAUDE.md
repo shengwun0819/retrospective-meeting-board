@@ -8,7 +8,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 npm run dev       # dev server at localhost:3000
 npm run build     # production build
 npm run lint      # ESLint with Next.js config
-npx tsc --noEmit  # TypeScript type check (no test suite configured)
+npx tsc --noEmit  # TypeScript type check
+npm test          # Jest unit tests (watch mode)
+npm run test:ci   # Jest CI mode with coverage report
 ```
 
 ## Environment Setup
@@ -27,6 +29,7 @@ Run migrations in order against your Supabase project (SQL Editor):
 2. `supabase/migrations/002_canvas_elements.sql`
 3. `supabase/migrations/003_canvas_element_interactions.sql`
 4. `supabase/migrations/004_normalize_positions.sql`
+5. `supabase/migrations/005_sticky_note_formatting.sql`
 
 ## Architecture
 
@@ -48,10 +51,13 @@ Canvas element creation uses **optimistic UI**: a `temp_${Date.now()}` prefixed 
 - **`components/board/Board.tsx`** — Central state owner: sticky notes, canvas elements, action items, online users, cursors, split positions, active tool, undo/redo stack. Sets up the Supabase realtime channel (`board:${boardId}`), wraps dnd-kit `DndContext`.
 - **`components/board/ResizableCanvas.tsx`** — Renders the 2×2 layout with draggable dividers. Handles all canvas drawing pointer events (`onPointerDown/Move/Up` on the root div). Uses `data-no-draw` attribute on interactive children to guard against accidental creation triggers. Exposes its container ref via `forwardRef`.
 - **`components/board/CanvasElement.tsx`** — Renders text/rect/circle/arrow elements. All interaction (drag-to-move, corner-resize, double-click-to-edit) uses Pointer Events API with `window.addEventListener` to avoid conflicts with the canvas container.
-- **`components/board/StickyNote.tsx`** — Uses `useDraggable` from dnd-kit. Dragging is disabled when `activeTool !== 'select'`.
+- **`components/board/StickyNote.tsx`** — Uses `useDraggable` from dnd-kit. Dragging is disabled when `activeTool !== 'select'`. Supports corner resize (width + height), B/I/U text formatting (persisted via `is_bold`/`is_italic`/`is_underline` fields), and Chinese IME-safe Enter key handling (`e.nativeEvent.isComposing`).
+- **`components/board/EmojiPicker.tsx`** — Full emoji picker with 8 categories (~600 emojis). Rendered inside `StickyNote.tsx` when user clicks ＋ in the reaction toolbar.
+- **`components/modals/AllCommentsPanel.tsx`** — Slide-in panel (from right) showing all sticky notes that have comments, with Reply and per-comment delete buttons. Triggered from the Comments button in `Toolbar.tsx`.
 - **`lib/supabase.ts`** — `getSupabaseClient()` (browser singleton) and `createServerSupabaseClient()` (API routes/SSR); realtime throttled to 10 events/sec.
+- **`lib/autoArrange.ts`** — Pure function `calculateAutoArrangePositions()` that computes normalized (0.0–1.0) positions for auto-arrange. Extracts logic from `Board.tsx`; groups notes by author alphabetically into columns, wraps at section boundary.
 - **`contexts/UserContext.tsx`** — Anonymous user identity (ID, name, color) stored in `sessionStorage`; set via `NicknameModal` on first visit.
-- **`types/index.ts`** — All shared TypeScript interfaces including `CanvasElement`, `CanvasTool`, `SectionId`.
+- **`types/index.ts`** — All shared TypeScript interfaces including `CanvasElement`, `CanvasTool`, `SectionId`. `StickyNote` includes `is_bold`, `is_italic`, `is_underline` fields.
 - **`lib/constants.ts`** — `SECTION_CONFIGS` (4 sections with colors/emojis), `REACTIONS`, `NOTE_COLORS`, `USER_COLORS`.
 
 ### Realtime Channels

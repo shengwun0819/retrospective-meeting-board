@@ -5,6 +5,7 @@ import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { StickyNote as StickyNoteType, CanvasTool } from '@/types'
 import { REACTIONS, SECTION_CONFIGS } from '@/lib/constants'
+import EmojiPicker from './EmojiPicker'
 
 type ResizeCorner = 'tl' | 'tr' | 'bl' | 'br'
 
@@ -41,6 +42,7 @@ export default function StickyNote({
   const [isEditing, setIsEditing] = useState(false)
   const [editContent, setEditContent] = useState(note.content)
   const [showReactions, setShowReactions] = useState(false)
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
   const [fontSizeIdx, setFontSizeIdx] = useState(1) // default: text-sm
   const [floatEmoji, setFloatEmoji] = useState<string | null>(null)
@@ -135,7 +137,7 @@ export default function StickyNote({
       setEditContent(note.content)
       setIsEditing(false)
     }
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault()
       handleBlur()
     }
@@ -159,6 +161,10 @@ export default function StickyNote({
     setShowReactions(false)
     setFloatEmoji(emoji)
     setTimeout(() => setFloatEmoji(null), 700)
+  }
+
+  const handleFormat = (field: 'is_bold' | 'is_italic' | 'is_underline') => {
+    onEdit({ ...note, [field]: !note[field] })
   }
 
   const reactionMap = (note.reactions ?? []).reduce<Record<string, number>>((acc, r) => {
@@ -201,6 +207,23 @@ export default function StickyNote({
             A+
           </button>
 
+          {/* Text formatting */}
+          <button
+            onClick={(e) => { e.stopPropagation(); handleFormat('is_bold') }}
+            className={`text-xs px-1.5 py-0.5 rounded font-bold transition-colors ${note.is_bold ? 'bg-gray-200 text-gray-900' : 'text-gray-500 hover:bg-gray-100'}`}
+            title="Bold"
+          >B</button>
+          <button
+            onClick={(e) => { e.stopPropagation(); handleFormat('is_italic') }}
+            className={`text-xs px-1.5 py-0.5 rounded italic transition-colors ${note.is_italic ? 'bg-gray-200 text-gray-900' : 'text-gray-500 hover:bg-gray-100'}`}
+            title="Italic"
+          >I</button>
+          <button
+            onClick={(e) => { e.stopPropagation(); handleFormat('is_underline') }}
+            className={`text-xs px-1.5 py-0.5 rounded underline transition-colors ${note.is_underline ? 'bg-gray-200 text-gray-900' : 'text-gray-500 hover:bg-gray-100'}`}
+            title="Underline"
+          >U</button>
+
           <div className="w-px bg-gray-200 self-stretch mx-0.5" />
 
           {/* Section colors */}
@@ -231,7 +254,7 @@ export default function StickyNote({
             </button>
             {showReactions && (
               <div
-                className="absolute bottom-8 left-0 bg-white rounded-full shadow-xl border border-gray-200 flex p-1 gap-1 z-30"
+                className="absolute bottom-8 left-0 bg-white rounded-xl shadow-xl border border-gray-200 flex items-center p-1 gap-1 z-30"
                 onMouseEnter={handleMouseEnter}
               >
                 {REACTIONS.map((emoji) => (
@@ -243,6 +266,20 @@ export default function StickyNote({
                     {emoji}
                   </button>
                 ))}
+                <div className="w-px bg-gray-200 self-stretch mx-0.5" />
+                <div className="relative">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowEmojiPicker(p => !p) }}
+                    className="text-sm px-1.5 py-0.5 rounded hover:bg-gray-100 text-gray-500 font-bold"
+                    title="更多 emoji"
+                  >＋</button>
+                  {showEmojiPicker && (
+                    <EmojiPicker
+                      onSelect={(emoji) => { handleReact(emoji) }}
+                      onClose={() => { setShowEmojiPicker(false); setShowReactions(false) }}
+                    />
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -292,7 +329,9 @@ export default function StickyNote({
         style={{
           ...style,
           width: liveSize?.w ?? note.width ?? 176,
-          minHeight: liveSize?.h ?? note.height ?? 110,
+          ...(liveSize?.h ?? note.height
+            ? { height: liveSize?.h ?? note.height, overflowY: 'auto' }
+            : { minHeight: 110 }),
         }}
         className={`relative rounded-lg shadow-md p-3 flex flex-col cursor-grab active:cursor-grabbing select-none transition-shadow ${
           isDragging ? 'shadow-xl ring-2 ring-blue-400' : isHovered ? 'shadow-lg' : ''
@@ -312,11 +351,24 @@ export default function StickyNote({
               onKeyDown={handleKeyDown}
               onClick={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.stopPropagation()}
-              className={`w-full h-full min-h-[70px] bg-transparent resize-none outline-none font-medium ${fontSizeClass}`}
+              className={[
+                'w-full h-full min-h-[70px] bg-transparent resize-none outline-none font-medium',
+                fontSizeClass,
+                note.is_bold ? 'font-bold' : '',
+                note.is_italic ? 'italic' : '',
+                note.is_underline ? 'underline' : '',
+              ].join(' ')}
               placeholder="Type your note..."
             />
           ) : (
-            <p className="min-h-[70px]">{note.content || <span className="text-gray-400 italic">Empty note</span>}</p>
+            <p className={[
+              'min-h-[70px] whitespace-pre-wrap',
+              note.is_bold ? 'font-bold' : '',
+              note.is_italic ? 'italic' : '',
+              note.is_underline ? 'underline' : '',
+            ].join(' ')}>
+              {note.content || <span className="text-gray-400 italic font-normal not-italic no-underline">Empty note</span>}
+            </p>
           )}
         </div>
 
@@ -350,6 +402,20 @@ export default function StickyNote({
           >
             — {note.author_name}
           </p>
+        )}
+
+        {/* Comment badge — always visible when there are comments */}
+        {commentCount > 0 && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onComment(note) }}
+            onMouseDown={(e) => e.stopPropagation()}
+            className="flex items-center gap-1 text-xs text-gray-500 hover:text-blue-500 transition-colors mt-1 w-fit"
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span>{commentCount}</span>
+          </button>
         )}
 
         {/* Reactions display */}
